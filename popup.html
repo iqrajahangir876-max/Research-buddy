@@ -1,454 +1,150 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
 
   <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Research Buddy</title>
 
-  <link
-    rel="stylesheet"
-    href="popup.css"
-  >
+  <link rel="stylesheet" href="popup.css">
 
 </head>
-
 
 <body>
 
   <div class="app">
 
+    <header class="header">
 
-    <!-- HEADER -->
-
-    <header class="topbar">
-
-      <div class="brand">
-
-        <div class="brand-icon">
-          🔎
-        </div>
-
-        <div>
-
-          <h1>
-            Research Buddy
-          </h1>
-
-          <p>
-            Your little AI research assistant
-          </p>
-
-        </div>
-
+      <div>
+        <h1>Research Buddy</h1>
+        <p>Your smart research notebook</p>
       </div>
 
-
-      <button
-        id="settingsBtn"
-        class="icon-btn"
-        title="AI Settings"
-      >
-        ⚙️
-      </button>
+      <div class="logo">RB</div>
 
     </header>
 
 
-
-    <!-- CURRENT PAGE -->
-
     <section class="page-card">
 
-      <div class="page-info">
+      <div class="page-icon">🌐</div>
 
-        <span class="page-label">
-          CURRENT PAGE
-        </span>
-
-        <h2 id="pageTitle">
-          Loading page...
-        </h2>
-
-        <p id="pageDomain">
-          ...
-        </p>
-
+      <div>
+        <h3 id="pageTitle">Current Page</h3>
+        <p id="pageDomain">No page selected</p>
       </div>
-
-
-      <button
-        id="extractPageBtn"
-        class="soft-btn"
-      >
-        📖 Extract Page
-      </button>
 
     </section>
 
 
+    <div class="stats">
 
-    <!-- AI ACTION BAR -->
+      <div class="stat-card">
+        <span id="noteCount">0</span>
+        <small>Highlights</small>
+      </div>
 
-    <section class="ai-section">
+      <div class="stat-card">
+        <span id="selectionInfo">0</span>
+        <small>Selected</small>
+      </div>
+
+    </div>
+
+
+    <section class="highlights-section">
 
       <div class="section-heading">
 
-        <div>
+        <h2>Saved Highlights</h2>
 
-          <h3>
-            🤖 AI Assistant
-          </h3>
+        <button id="selectAllBtn" class="small-btn">
+          Select All
+        </button>
+
+      </div>
+
+
+      <div id="highlightsContainer" class="highlights-container">
+
+        <div class="empty-state">
+
+          <div class="empty-icon">✨</div>
+
+          <h3>No highlights yet</h3>
 
           <p>
-            Turn your research into useful notes
+            Select text on any webpage and use
+            <b>Save Highlight</b>.
           </p>
 
         </div>
 
       </div>
 
-
-      <div class="ai-grid">
-
-        <button
-          class="ai-btn"
-          data-action="summarize"
-        >
-          <span>✨</span>
-          <strong>Summarize</strong>
-        </button>
-
-
-        <button
-          class="ai-btn"
-          data-action="keypoints"
-        >
-          <span>🔑</span>
-          <strong>Key Points</strong>
-        </button>
-
-
-        <button
-          class="ai-btn"
-          data-action="explain"
-        >
-          <span>🧠</span>
-          <strong>Explain Simply</strong>
-        </button>
-
-
-        <button
-          class="ai-btn"
-          data-action="facts"
-        >
-          <span>📌</span>
-          <strong>Extract Facts</strong>
-        </button>
-
-      </div>
-
     </section>
 
 
+    <div class="actions">
 
-    <!-- SAVED NOTES -->
+      <button id="exportBtn" class="primary-btn">
+        📥 Export
+      </button>
 
-    <section class="notes-section">
-
-      <div class="section-heading notes-heading">
-
-        <div>
-
-          <h3>
-            Saved Highlights
-          </h3>
-
-          <p id="noteCount">
-            0 notes
-          </p>
-
-        </div>
-
-
-        <button
-          id="selectAllBtn"
-          class="text-btn"
-        >
-          Select all
-        </button>
-
-      </div>
-
-
-      <div
-        id="highlightsContainer"
-        class="notes-list"
-      ></div>
-
-    </section>
-
-
-
-    <!-- BOTTOM ACTIONS -->
-
-    <section class="bottom-panel">
-
-      <div id="selectionInfo">
-        0 notes selected
-      </div>
-
-
-      <div class="bottom-buttons">
-
-        <button
-          id="exportBtn"
-          class="primary-btn"
-        >
-          📤 Export
-        </button>
-
-
-        <button
-          id="clearBtn"
-          class="danger-btn"
-        >
-          Clear
-        </button>
-
-      </div>
-
-    </section>
-
-
-
-  </div>
-
-
-
-  <!-- AI RESULT MODAL -->
-
-  <div
-    id="aiModal"
-    class="modal hidden"
-  >
-
-    <div class="modal-card">
-
-      <div class="modal-header">
-
-        <div>
-
-          <span class="modal-icon">
-            🤖
-          </span>
-
-          <h2 id="modalTitle">
-            AI Result
-          </h2>
-
-        </div>
-
-
-        <button
-          id="closeModalBtn"
-          class="close-btn"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div
-        id="aiLoading"
-        class="loading hidden"
-      >
-        <div class="spinner"></div>
-
-        <p>
-          AI is thinking...
-        </p>
-      </div>
-
-
-      <div
-        id="aiResult"
-        class="ai-result"
-      ></div>
-
-
-      <button
-        id="copyAiBtn"
-        class="primary-btn full-btn"
-      >
-        📋 Copy Result
+      <button id="clearBtn" class="danger-btn">
+        🗑 Clear
       </button>
 
     </div>
 
+
+    <footer>
+
+      <span>Research Buddy</span>
+      <span>Simple • Fast • Useful</span>
+
+    </footer>
+
   </div>
 
 
+  <!-- Export Modal -->
 
-  <!-- EXPORT MODAL -->
+  <div id="exportModal" class="modal hidden">
 
-  <div
-    id="exportModal"
-    class="modal hidden"
-  >
+    <div class="modal-box">
 
-    <div class="modal-card small-card">
+      <button id="closeModal" class="close-btn">×</button>
 
-      <div class="modal-header">
+      <h2>Export Highlights</h2>
 
-        <div>
-
-          <span class="modal-icon">
-            📤
-          </span>
-
-          <h2>
-            Export Notes
-          </h2>
-
-        </div>
+      <p>Choose your preferred format.</p>
 
 
-        <button
-          id="closeExportBtn"
-          class="close-btn"
-        >
-          ×
-        </button>
+      <div class="format-options">
 
-      </div>
-
-
-      <label>
-        What do you want to export?
-      </label>
-
-
-      <select id="exportScope">
-
-        <option value="selected">
-          Selected notes
-        </option>
-
-        <option value="all">
-          All saved notes
-        </option>
-
-        <option value="current">
-          Current page notes
-        </option>
-
-      </select>
-
-
-      <label>
-        File format
-      </label>
-
-
-      <div class="format-buttons">
-
-        <button
-          class="format-btn active"
-          data-format="txt"
-        >
+        <button class="format-btn active" data-format="txt">
           📄 TXT
         </button>
 
-        <button
-          class="format-btn"
-          data-format="md"
-        >
+        <button class="format-btn" data-format="md">
           📝 Markdown
         </button>
 
       </div>
 
 
-      <button
-        id="doExportBtn"
-        class="primary-btn full-btn"
-      >
-        Export Notes
+      <button id="downloadBtn" class="primary-btn full">
+        Download
       </button>
 
     </div>
 
   </div>
-
-
-
-  <!-- SETTINGS MODAL -->
-
-  <div
-    id="settingsModal"
-    class="modal hidden"
-  >
-
-    <div class="modal-card small-card">
-
-      <div class="modal-header">
-
-        <div>
-
-          <span class="modal-icon">
-            ⚙️
-          </span>
-
-          <h2>
-            AI Settings
-          </h2>
-
-        </div>
-
-
-        <button
-          id="closeSettingsBtn"
-          class="close-btn"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <p class="settings-note">
-        Add your OpenAI API key for AI features.
-        Keep it private and never upload it to GitHub.
-      </p>
-
-
-      <input
-        id="apiKeyInput"
-        type="password"
-        placeholder="sk-..."
-      >
-
-
-      <button
-        id="saveApiKeyBtn"
-        class="primary-btn full-btn"
-      >
-        Save API Key
-      </button>
-
-    </div>
-
-  </div>
-
 
 
   <script src="popup.js"></script>

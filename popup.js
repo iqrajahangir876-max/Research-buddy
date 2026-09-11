@@ -1,121 +1,7 @@
-// ==========================================
-// RESEARCH BUDDY - POPUP JAVASCRIPT
-// ==========================================
-
-
-// ---------- ELEMENTS ----------
-
-const highlightsContainer =
-  document.getElementById("highlightsContainer");
-
-const noteCount =
-  document.getElementById("noteCount");
-
-const selectionInfo =
-  document.getElementById("selectionInfo");
-
-const pageTitle =
-  document.getElementById("pageTitle");
-
-const pageDomain =
-  document.getElementById("pageDomain");
-
-const extractPageBtn =
-  document.getElementById("extractPageBtn");
-
-const selectAllBtn =
-  document.getElementById("selectAllBtn");
-
-const exportBtn =
-  document.getElementById("exportBtn");
-
-const clearBtn =
-  document.getElementById("clearBtn");
-
-
-// ---------- MODALS ----------
-
-const aiModal =
-  document.getElementById("aiModal");
-
-const exportModal =
-  document.getElementById("exportModal");
-
-const settingsModal =
-  document.getElementById("settingsModal");
-
-const closeModalBtn =
-  document.getElementById("closeModalBtn");
-
-const closeExportBtn =
-  document.getElementById("closeExportBtn");
-
-const closeSettingsBtn =
-  document.getElementById("closeSettingsBtn");
-
-
-// ---------- AI ----------
-
-const aiResult =
-  document.getElementById("aiResult");
-
-const aiLoading =
-  document.getElementById("aiLoading");
-
-const modalTitle =
-  document.getElementById("modalTitle");
-
-const copyAiBtn =
-  document.getElementById("copyAiBtn");
-
-
-// ---------- SETTINGS ----------
-
-const settingsBtn =
-  document.getElementById("settingsBtn");
-
-const apiKeyInput =
-  document.getElementById("apiKeyInput");
-
-const saveApiKeyBtn =
-  document.getElementById("saveApiKeyBtn");
-
-
-// ---------- EXPORT ----------
-
-const exportScope =
-  document.getElementById("exportScope");
-
-const doExportBtn =
-  document.getElementById("doExportBtn");
-
-
-// ---------- STATE ----------
-
 let allHighlights = [];
-
 let currentTab = null;
-
-let currentPageText = "";
-
 let selectedFormat = "txt";
 
-let lastAIResult = "";
-
-
-// ==========================================
-// AI BACKEND
-// ==========================================
-
- 
- const AI_API_URL =
-  "https://research-buddy-sigma.vercel.app/api/ai";
-
-
-
-// ==========================================
-// INITIALIZE
-// ==========================================
 
 init();
 
@@ -129,10 +15,7 @@ async function init() {
 }
 
 
-
-// ==========================================
-// GET CURRENT TAB
-// ==========================================
+/* GET CURRENT TAB */
 
 async function getCurrentTab() {
 
@@ -147,45 +30,26 @@ async function getCurrentTab() {
     return;
   }
 
+  document.getElementById("pageTitle").textContent =
+    currentTab.title || "Current Page";
 
-  pageTitle.textContent =
-    currentTab.title || "Current webpage";
-
-
-  try {
-
-    const url =
-      new URL(currentTab.url);
-
-    pageDomain.textContent =
-      url.hostname;
-
-  } catch {
-
-    pageDomain.textContent =
-      "Web page";
-
-  }
+  document.getElementById("pageDomain").textContent =
+    currentTab.url || "";
 
 }
 
 
-
-// ==========================================
-// LOAD HIGHLIGHTS
-// ==========================================
+/* LOAD HIGHLIGHTS */
 
 function loadHighlights() {
 
   chrome.storage.local.get(
     { highlights: [] },
-
     (data) => {
 
-      allHighlights =
-        data.highlights || [];
+      allHighlights = data.highlights || [];
 
-      displayCurrentTabHighlights();
+      displayHighlights();
 
     }
   );
@@ -193,150 +57,85 @@ function loadHighlights() {
 }
 
 
+/* DISPLAY */
 
-// ==========================================
-// CURRENT TAB FILTER
-// ==========================================
+function displayHighlights() {
 
-function displayCurrentTabHighlights() {
+  const container =
+    document.getElementById("highlightsContainer");
 
-  if (!currentTab) {
-    displayHighlights([]);
-    return;
-  }
-
-
-  const currentUrl =
-    currentTab.url;
+  const currentHighlights =
+    allHighlights.filter(note =>
+      note.url === currentTab?.url
+    );
 
 
-  const currentNotes =
-    allHighlights.filter(note => {
-
-      return note.url === currentUrl;
-
-    });
+  document.getElementById("noteCount").textContent =
+    currentHighlights.length;
 
 
-  displayHighlights(currentNotes);
-
-}
+  document.getElementById("selectionInfo").textContent = "0";
 
 
+  if (currentHighlights.length === 0) {
 
-// ==========================================
-// DISPLAY NOTES
-// ==========================================
-
-function displayHighlights(highlights) {
-
-  highlightsContainer.innerHTML = "";
-
-
-  noteCount.textContent =
-    `${highlights.length} ${
-      highlights.length === 1
-        ? "note"
-        : "notes"
-    }`;
-
-
-  updateSelectionInfo();
-
-
-  if (highlights.length === 0) {
-
-    highlightsContainer.innerHTML = `
-
+    container.innerHTML = `
       <div class="empty-state">
-
-        <div class="empty-icon">
-          📝
-        </div>
-
-        <h4>
-          No highlights yet
-        </h4>
-
+        <div class="empty-icon">✨</div>
+        <h3>No highlights yet</h3>
         <p>
-          Select something interesting
-          on this page and save it.
+          Select text on this webpage,
+          right-click and choose
+          <b>🟨 Save Highlight</b>.
         </p>
-
       </div>
-
     `;
 
     return;
+
   }
 
 
-  highlights.forEach(note => {
-
-    const card =
-      document.createElement("div");
-
-    card.className =
-      "note-card";
+  container.innerHTML = "";
 
 
-    const domain =
-      getShortDomain(note.url);
+  currentHighlights.forEach(note => {
 
+    const card = document.createElement("div");
+
+    card.className = "highlight-card";
 
     card.innerHTML = `
 
-      <div class="note-top">
+      <div class="highlight-top">
 
         <input
           type="checkbox"
-          class="note-checkbox"
+          class="highlight-check"
           data-id="${note.id}"
         >
 
-        <div class="note-text">
-          🟨 ${escapeHtml(note.text)}
+        <div class="highlight-text">
+          ${escapeHtml(note.text)}
         </div>
 
       </div>
 
-
-      <div class="note-source">
-
-        <span class="source-icon">
-          🔗
-        </span>
-
-        <span
-          class="source-domain"
-          title="${escapeHtml(note.url)}"
-        >
-          ${escapeHtml(domain)}
-        </span>
-
+      <div class="highlight-meta">
+        ${note.createdAt}
       </div>
 
-
-      <div class="note-actions">
-
-        <button
-          class="mini-btn ai-note-btn"
-          data-id="${note.id}"
-        >
-          🤖 AI
-        </button>
+      <div class="card-actions">
 
         <button
-          class="mini-btn copy-note-btn"
-          data-id="${note.id}"
-        >
+          class="card-btn copy-btn"
+          data-id="${note.id}">
           📋 Copy
         </button>
 
         <button
-          class="mini-btn delete-btn"
-          data-id="${note.id}"
-        >
+          class="card-btn delete-btn"
+          data-id="${note.id}">
           🗑 Delete
         </button>
 
@@ -345,1062 +144,337 @@ function displayHighlights(highlights) {
     `;
 
 
-    highlightsContainer.appendChild(card);
+    container.appendChild(card);
 
   });
 
 
-  attachNoteEvents();
+  addCardEvents();
 
 }
 
 
+/* CARD EVENTS */
 
-// ==========================================
-// NOTE EVENTS
-// ==========================================
+function addCardEvents() {
 
-function attachNoteEvents() {
-
-  document
-    .querySelectorAll(".note-checkbox")
+  document.querySelectorAll(".highlight-check")
     .forEach(checkbox => {
 
-      checkbox.addEventListener(
-        "change",
-        updateSelectionInfo
-      );
+      checkbox.addEventListener("change", updateSelectionInfo);
 
     });
 
 
-  document
-    .querySelectorAll(".ai-note-btn")
+  document.querySelectorAll(".copy-btn")
     .forEach(button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+      button.addEventListener("click", () => {
 
-          const id =
-            Number(button.dataset.id);
+        const id = Number(button.dataset.id);
 
-          const note =
-            allHighlights.find(
-              item => item.id === id
-            );
+        const note = allHighlights.find(
+          item => item.id === id
+        );
 
-          if (note) {
+        if (note) {
 
-            runAI(
-              "summarize",
-              note.text
-            );
+          navigator.clipboard.writeText(note.text);
 
-          }
-
-        }
-      );
-
-    });
-
-
-  document
-    .querySelectorAll(".copy-note-btn")
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        async () => {
-
-          const id =
-            Number(button.dataset.id);
-
-          const note =
-            allHighlights.find(
-              item => item.id === id
-            );
-
-          if (!note) {
-            return;
-          }
-
-
-          await navigator.clipboard.writeText(
-            note.text
-          );
-
-
-          button.textContent =
-            "✓ Copied";
-
+          button.textContent = "✓ Copied";
 
           setTimeout(() => {
-
-            button.textContent =
-              "📋 Copy";
-
-          }, 1200);
+            button.textContent = "📋 Copy";
+          }, 1000);
 
         }
-      );
+
+      });
 
     });
 
 
-  document
-    .querySelectorAll(".delete-btn")
+  document.querySelectorAll(".delete-btn")
     .forEach(button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+      button.addEventListener("click", () => {
 
-          const id =
-            Number(button.dataset.id);
+        deleteHighlight(Number(button.dataset.id));
 
-          deleteHighlight(id);
-
-        }
-      );
+      });
 
     });
 
 }
 
 
-
-// ==========================================
-// DELETE
-// ==========================================
-
-function deleteHighlight(id) {
-
-  allHighlights =
-    allHighlights.filter(
-      note => note.id !== id
-    );
-
-
-  chrome.storage.local.set(
-    {
-      highlights: allHighlights
-    },
-    () => {
-
-      displayCurrentTabHighlights();
-
-    }
-  );
-
-}
-
-
-
-// ==========================================
-// SELECTED NOTES
-// ==========================================
-
-function getSelectedNotes() {
-
-  const checkboxes =
-    document.querySelectorAll(
-      ".note-checkbox:checked"
-    );
-
-
-  const ids =
-    Array.from(checkboxes).map(
-      checkbox =>
-        Number(checkbox.dataset.id)
-    );
-
-
-  return allHighlights.filter(note =>
-    ids.includes(note.id)
-  );
-
-}
-
-
-
-// ==========================================
-// SELECTION COUNT
-// ==========================================
+/* SELECTION COUNT */
 
 function updateSelectionInfo() {
 
   const selected =
     document.querySelectorAll(
-      ".note-checkbox:checked"
-    );
+      ".highlight-check:checked"
+    ).length;
 
-
-  selectionInfo.textContent =
-    `${selected.length} ${
-      selected.length === 1
-        ? "note"
-        : "notes"
-    } selected`;
+  document.getElementById("selectionInfo").textContent =
+    selected;
 
 }
 
 
+/* SELECT ALL */
 
-// ==========================================
-// SELECT ALL
-// ==========================================
-
-selectAllBtn.addEventListener(
-  "click",
-  () => {
+document
+  .getElementById("selectAllBtn")
+  .addEventListener("click", () => {
 
     const checkboxes =
-      document.querySelectorAll(
-        ".note-checkbox"
-      );
+      document.querySelectorAll(".highlight-check");
+
+    const allSelected =
+      checkboxes.length > 0 &&
+      [...checkboxes].every(box => box.checked);
 
 
-    const shouldSelect =
-      Array.from(checkboxes).some(
-        checkbox => !checkbox.checked
-      );
-
-
-    checkboxes.forEach(checkbox => {
-
-      checkbox.checked =
-        shouldSelect;
-
+    checkboxes.forEach(box => {
+      box.checked = !allSelected;
     });
-
-
-    selectAllBtn.textContent =
-      shouldSelect
-        ? "Unselect all"
-        : "Select all";
 
 
     updateSelectionInfo();
 
-  }
-);
+  });
 
 
+/* DELETE */
 
-// ==========================================
-// EXTRACT CURRENT PAGE
-// ==========================================
+function deleteHighlight(id) {
 
-extractPageBtn.addEventListener(
-  "click",
-  async () => {
+  allHighlights =
+    allHighlights.filter(note => note.id !== id);
 
-    if (!currentTab?.id) {
-      return;
+
+  chrome.storage.local.set(
+    { highlights: allHighlights },
+    () => {
+      displayHighlights();
     }
+  );
+
+}
 
 
-    try {
-
-      const response =
-        await chrome.tabs.sendMessage(
-          currentTab.id,
-          {
-            action: "extractPageText"
-          }
-        );
-
-
-      currentPageText =
-        response?.text || "";
-
-
-      if (!currentPageText) {
-
-        alert(
-          "Could not extract text from this page."
-        );
-
-        return;
-
-      }
-
-
-      extractPageBtn.textContent =
-        "✓ Page Ready";
-
-
-      extractPageBtn.style.background =
-        "#e9f9f1";
-
-
-      extractPageBtn.style.color =
-        "#218653";
-
-    } catch (error) {
-
-      alert(
-        "This page does not allow text extraction."
-      );
-
-    }
-
-  }
-);
-
-
-
-// ==========================================
-// AI BUTTONS
-// ==========================================
+/* EXPORT BUTTON */
 
 document
-  .querySelectorAll(".ai-btn")
-  .forEach(button => {
+  .getElementById("exportBtn")
+  .addEventListener("click", () => {
 
-    button.addEventListener(
-      "click",
-      async () => {
-
-        const action =
-          button.dataset.action;
-
-
-        const selected =
-          getSelectedNotes();
-
-
-        let text = "";
-
-
-        if (selected.length > 0) {
-
-          text =
-            selected
-              .map(note => note.text)
-              .join("\n\n");
-
-        } else if (currentPageText) {
-
-          text =
-            currentPageText;
-
-        } else {
-
-          text =
-            await getSelectedWebText();
-
-        }
-
-
-        if (!text) {
-
-          alert(
-            "Select a saved note first, or use Extract Page."
-          );
-
-          return;
-
-        }
-
-
-        runAI(action, text);
-
-      }
-    );
+    document
+      .getElementById("exportModal")
+      .classList.remove("hidden");
 
   });
 
 
-
-// ==========================================
-// GET SELECTED TEXT FROM WEBPAGE
-// ==========================================
-
-async function getSelectedWebText() {
-
-  if (!currentTab?.id) {
-    return "";
-  }
-
-
-  try {
-
-    const response =
-      await chrome.tabs.sendMessage(
-        currentTab.id,
-        {
-          action: "getSelectedText"
-        }
-      );
-
-
-    return response?.text || "";
-
-  } catch {
-
-    return "";
-
-  }
-
-}
-
-// ==========================================
-// AI FUNCTION
-// ==========================================
-
-async function runAI(action, text) {
-
-  if (!text || !text.trim()) {
-
-    alert(
-      "No research text is available."
-    );
-
-    return;
-
-  }
-
-
-  modalTitle.textContent =
-    getActionTitle(action);
-
-
-  aiModal.classList.remove(
-    "hidden"
-  );
-
-
-  aiResult.textContent = "";
-
-
-  aiLoading.classList.remove(
-    "hidden"
-  );
-
-
-  copyAiBtn.style.display =
-    "none";
-
-
-  lastAIResult = "";
-
-
-  try {
-
-    const response =
-      await fetch(
-        AI_API_URL,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify({
-
-            action: action,
-
-            text:
-              text.slice(
-                0,
-                25000
-              )
-
-          })
-
-        }
-      );
-
-
-    const data =
-      await response.json();
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        data?.error ||
-        "Gemini AI request failed."
-      );
-
-    }
-
-
-    const result =
-      data?.result?.trim();
-
-
-    lastAIResult =
-      result ||
-      "No result generated.";
-
-
-    aiResult.textContent =
-      lastAIResult;
-
-
-    copyAiBtn.style.display =
-      "block";
-
-
-  } catch (error) {
-
-    console.error(
-      "Research Buddy AI Error:",
-      error
-    );
-
-
-    aiResult.textContent =
-      `AI Error:
-
-${error.message}
-
-Please check your Vercel backend, Gemini API key, and internet connection.`;
-
-  } finally {
-
-    aiLoading.classList.add(
-      "hidden"
-    );
-
-  }
-
-}
-
-
-
-// ==========================================
-// ACTION TITLES
-// ==========================================
-
-function getActionTitle(action) {
-
-  const titles = {
-
-    summarize:
-      "✨ AI Summary",
-
-    keypoints:
-      "🔑 Key Points",
-
-    explain:
-      "🧠 Simple Explanation",
-
-    facts:
-      "📌 Important Facts"
-
-  };
-
-
-  return titles[action] ||
-    "🤖 AI Result";
-
-}
-
-
-
-// ==========================================
-// COPY AI RESULT
-// ==========================================
-
-copyAiBtn.addEventListener(
-  "click",
-  async () => {
-
-    if (!lastAIResult) {
-      return;
-    }
-
-
-    await navigator.clipboard.writeText(
-      lastAIResult
-    );
-
-
-    copyAiBtn.textContent =
-      "✓ Copied";
-
-
-    setTimeout(() => {
-
-      copyAiBtn.textContent =
-        "📋 Copy Result";
-
-    }, 1200);
-
-  }
-);
-
-
-
-// ==========================================
-// AI MODAL CLOSE
-// ==========================================
-
-closeModalBtn.addEventListener(
-  "click",
-  () => {
-
-    aiModal.classList.add(
-      "hidden"
-    );
-
-  }
-);
-
-
-
-// ==========================================
-// EXPORT MODAL
-// ==========================================
-
-exportBtn.addEventListener(
-  "click",
-  () => {
-
-    exportModal.classList.remove(
-      "hidden"
-    );
-
-  }
-);
-
-
-closeExportBtn.addEventListener(
-  "click",
-  () => {
-
-    exportModal.classList.add(
-      "hidden"
-    );
-
-  }
-);
-
-
-
-// ==========================================
-// FORMAT BUTTONS
-// ==========================================
+/* CLOSE MODAL */
 
 document
-  .querySelectorAll(".format-btn")
-  .forEach(button => {
+  .getElementById("closeModal")
+  .addEventListener("click", () => {
 
-    button.addEventListener(
-      "click",
-      () => {
-
-        document
-          .querySelectorAll(
-            ".format-btn"
-          )
-          .forEach(btn =>
-            btn.classList.remove(
-              "active"
-            )
-          );
-
-
-        button.classList.add(
-          "active"
-        );
-
-
-        selectedFormat =
-          button.dataset.format;
-
-      }
-    );
+    document
+      .getElementById("exportModal")
+      .classList.add("hidden");
 
   });
 
-  // ==========================================
-// EXPORT
-// ==========================================
 
-doExportBtn.addEventListener(
-  "click",
-  () => {
+/* FORMAT */
 
-    let notes = [];
+document.querySelectorAll(".format-btn")
+  .forEach(button => {
 
+    button.addEventListener("click", () => {
 
-    const scope =
-      exportScope.value;
-
-
-    if (scope === "selected") {
-
-      notes =
-        getSelectedNotes();
-
-
-      if (notes.length === 0) {
-
-        alert(
-          "Please select at least one note."
+      document
+        .querySelectorAll(".format-btn")
+        .forEach(btn =>
+          btn.classList.remove("active")
         );
 
-        return;
+      button.classList.add("active");
 
-      }
+      selectedFormat =
+        button.dataset.format;
 
-    }
+    });
 
-
-    if (scope === "all") {
-
-      notes =
-        allHighlights;
-
-    }
+  });
 
 
-    if (scope === "current") {
+/* DOWNLOAD */
 
-      notes =
-        allHighlights.filter(
-          note =>
-            note.url === currentTab?.url
-        );
+document
+  .getElementById("downloadBtn")
+  .addEventListener("click", () => {
 
-    }
-
-
-    if (notes.length === 0) {
-
-      alert(
-        "There are no notes to export."
+    const currentHighlights =
+      allHighlights.filter(note =>
+        note.url === currentTab?.url
       );
+
+
+    if (currentHighlights.length === 0) {
+
+      alert("No highlights to export.");
 
       return;
 
     }
 
 
-    if (selectedFormat === "txt") {
+    let content = "";
 
-      exportTXT(notes);
+
+    if (selectedFormat === "md") {
+
+      content += `# Research Buddy Notes\n\n`;
+
+      content += `**Page:** ${
+        currentTab.title || "Web Page"
+      }\n\n`;
+
+      content += `**URL:** ${
+        currentTab.url
+      }\n\n`;
+
+      content += `---\n\n`;
+
+
+      currentHighlights.forEach((note, index) => {
+
+        content += `## Highlight ${index + 1}\n\n`;
+
+        content += `> ${note.text}\n\n`;
+
+        content += `*Saved: ${note.createdAt}*\n\n`;
+
+        content += `---\n\n`;
+
+      });
 
     } else {
 
-      exportMarkdown(notes);
+      content += `RESEARCH BUDDY NOTES\n`;
+
+      content += `====================\n\n`;
+
+      content += `Page: ${
+        currentTab.title || "Web Page"
+      }\n`;
+
+      content += `URL: ${
+        currentTab.url
+      }\n\n`;
+
+
+      currentHighlights.forEach((note, index) => {
+
+        content += `Highlight ${index + 1}\n`;
+
+        content += `${note.text}\n`;
+
+        content += `Saved: ${note.createdAt}\n\n`;
+
+      });
 
     }
 
 
-    exportModal.classList.add(
-      "hidden"
-    );
-
-  }
-);
+    const extension =
+      selectedFormat === "md"
+        ? "md"
+        : "txt";
 
 
-
-// ==========================================
-// TXT EXPORT
-// ==========================================
-
-function exportTXT(notes) {
-
-  let content =
-    "RESEARCH BUDDY NOTES\n";
-
-
-  content +=
-    "====================\n\n";
-
-
-  notes.forEach(
-    (note, index) => {
-
-      content +=
-        `NOTE ${index + 1}\n`;
-
-      content +=
-        `${note.text}\n`;
-
-      content +=
-        `Source: ${note.url}\n`;
-
-      content +=
-        `Saved: ${note.createdAt}\n`;
-
-      content +=
-        "--------------------\n\n";
-
-    }
-  );
-
-
-  downloadFile(
-    content,
-    "research-buddy-notes.txt",
-    "text/plain"
-  );
-
-}
-
-
-
-// ==========================================
-// MARKDOWN EXPORT
-// ==========================================
-
-function exportMarkdown(notes) {
-
-  let content =
-    "# Research Buddy Notes\n\n";
-
-
-  notes.forEach(
-    (note, index) => {
-
-      content +=
-        `## Note ${index + 1}\n\n`;
-
-      content +=
-        `> ${note.text}\n\n`;
-
-      content +=
-        `**Source:** ${note.url}\n\n`;
-
-      content +=
-        `**Saved:** ${note.createdAt}\n\n`;
-
-      content +=
-        "---\n\n";
-
-    }
-  );
-
-
-  downloadFile(
-    content,
-    "research-buddy-notes.md",
-    "text/markdown"
-  );
-
-}
-
-
-
-// ==========================================
-// DOWNLOAD FILE
-// ==========================================
-
-function downloadFile(
-  content,
-  filename,
-  type
-) {
-
-  const blob =
-    new Blob(
+    const blob = new Blob(
       [content],
-      { type }
+      { type: "text/plain" }
     );
 
 
-  const url =
-    URL.createObjectURL(blob);
+    const url =
+      URL.createObjectURL(blob);
 
 
-  const link =
-    document.createElement("a");
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      `research-notes.${extension}`;
+
+    link.click();
 
 
-  link.href =
-    url;
+    URL.revokeObjectURL(url);
+
+  });
 
 
-  link.download =
-    filename;
+/* CLEAR */
+
+document
+  .getElementById("clearBtn")
+  .addEventListener("click", () => {
+
+    const currentUrl = currentTab?.url;
 
 
-  document.body.appendChild(link);
-
-
-  link.click();
-
-
-  link.remove();
-
-
-  URL.revokeObjectURL(url);
-
-}
-
-
-
-// ==========================================
-// CLEAR ALL
-// ==========================================
-
-clearBtn.addEventListener(
-  "click",
-  () => {
-
-    const currentNotes =
-      allHighlights.filter(
-        note =>
-          note.url === currentTab?.url
-      );
-
-
-    if (currentNotes.length === 0) {
-
-      alert(
-        "There are no highlights on this page."
-      );
-
+    if (!currentUrl) {
       return;
-
     }
 
 
-    const confirmDelete =
+    const confirmed =
       confirm(
-        "Clear all highlights from this page?"
+        "Delete all highlights from this page?"
       );
 
 
-    if (!confirmDelete) {
+    if (!confirmed) {
       return;
     }
-
-
-    const currentIds =
-      new Set(
-        currentNotes.map(
-          note => note.id
-        )
-      );
 
 
     allHighlights =
       allHighlights.filter(
-        note =>
-          !currentIds.has(note.id)
+        note => note.url !== currentUrl
       );
 
 
     chrome.storage.local.set(
-      {
-        highlights: allHighlights
-      },
+      { highlights: allHighlights },
       () => {
-
-        displayCurrentTabHighlights();
-
+        displayHighlights();
       }
     );
 
-  }
-);
+  });
 
 
-
-// ==========================================
-// SETTINGS
-// ==========================================
-
-settingsBtn.addEventListener(
-  "click",
-  () => {
-
-    settingsModal.classList.remove(
-      "hidden"
-    );
-
-  }
-);
-
-
-closeSettingsBtn.addEventListener(
-  "click",
-  () => {
-
-    settingsModal.classList.add(
-      "hidden"
-    );
-
-  }
-);
-
-
-// Gemini API key extension ke andar
-// store nahi hogi.
-// API key Vercel backend par secure rahegi.
-
-if (saveApiKeyBtn) {
-
-  saveApiKeyBtn.addEventListener(
-    "click",
-    () => {
-
-      alert(
-        "AI is securely connected through the backend. You do not need to enter an API key here."
-      );
-
-
-      settingsModal.classList.add(
-        "hidden"
-      );
-
-    }
-  );
-
-}
-
-
-
-// ==========================================
-// SHORT URL
-// ==========================================
-
-function getShortDomain(url) {
-
-  try {
-
-    const parsed =
-      new URL(url);
-
-
-    return parsed.hostname;
-
-  } catch {
-
-    return "Web source";
-
-  }
-
-}
-
-
-
-// ==========================================
-// ESCAPE HTML
-// ==========================================
+/* ESCAPE HTML */
 
 function escapeHtml(text) {
 
   const div =
     document.createElement("div");
 
-
-  div.textContent =
-    text || "";
-
+  div.textContent = text;
 
   return div.innerHTML;
 
 }
-
