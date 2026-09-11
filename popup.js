@@ -103,6 +103,15 @@ let selectedFormat = "txt";
 let lastAIResult = "";
 
 
+// ==========================================
+// AI BACKEND
+// ==========================================
+
+ 
+ const AI_API_URL =
+  "https://research-buddy-sigma.vercel.app/api/ai";
+
+
 
 // ==========================================
 // INITIALIZE
@@ -116,8 +125,6 @@ async function init() {
   await getCurrentTab();
 
   loadHighlights();
-
-  loadSavedApiKey();
 
 }
 
@@ -427,6 +434,7 @@ function attachNoteEvents() {
           button.textContent =
             "✓ Copied";
 
+
           setTimeout(() => {
 
             button.textContent =
@@ -626,6 +634,7 @@ extractPageBtn.addEventListener(
       extractPageBtn.style.background =
         "#e9f9f1";
 
+
       extractPageBtn.style.color =
         "#218653";
 
@@ -737,48 +746,21 @@ async function getSelectedWebText() {
 
 }
 
-
-
 // ==========================================
 // AI FUNCTION
 // ==========================================
 
 async function runAI(action, text) {
 
-  const apiKey =
-    await getApiKey();
-
-
-  if (!apiKey) {
-
-    settingsModal.classList.remove(
-      "hidden"
-    );
+  if (!text || !text.trim()) {
 
     alert(
-      "Please add your OpenAI API key first."
+      "No research text is available."
     );
 
     return;
 
   }
-
-
-  const prompts = {
-
-    summarize:
-      "Summarize the following research text in 3-5 clear sentences. Keep the important information and remove repetition.",
-
-    keypoints:
-      "Extract the most important key points from the following research text. Use short bullet points.",
-
-    explain:
-      "Explain the following research text in very simple language, as if explaining it to a university student who is new to the topic.",
-
-    facts:
-      "Extract the most useful factual information from the following research text. Use concise bullet points."
-
-  };
 
 
   modalTitle.textContent =
@@ -802,37 +784,31 @@ async function runAI(action, text) {
     "none";
 
 
+  lastAIResult = "";
+
+
   try {
 
     const response =
       await fetch(
-        "https://api.openai.com/v1/responses",
+        AI_API_URL,
         {
-
           method: "POST",
 
           headers: {
-
             "Content-Type":
-              "application/json",
-
-            "Authorization":
-              `Bearer ${apiKey}`
-
+              "application/json"
           },
 
           body: JSON.stringify({
 
-            model: "gpt-5",
+            action: action,
 
-            input:
-              `${prompts[action]}
-
-Research text:
-
-${text.slice(0, 25000)}`,
-
-            max_output_tokens: 700
+            text:
+              text.slice(
+                0,
+                25000
+              )
 
           })
 
@@ -847,19 +823,20 @@ ${text.slice(0, 25000)}`,
     if (!response.ok) {
 
       throw new Error(
-        data?.error?.message ||
-        "AI request failed."
+        data?.error ||
+        "Gemini AI request failed."
       );
 
     }
 
 
     const result =
-      extractAIText(data);
+      data?.result?.trim();
 
 
     lastAIResult =
-      result || "No result generated.";
+      result ||
+      "No result generated.";
 
 
     aiResult.textContent =
@@ -872,12 +849,18 @@ ${text.slice(0, 25000)}`,
 
   } catch (error) {
 
+    console.error(
+      "Research Buddy AI Error:",
+      error
+    );
+
+
     aiResult.textContent =
       `AI Error:
 
 ${error.message}
 
-Please check your API key and internet connection.`;
+Please check your Vercel backend, Gemini API key, and internet connection.`;
 
   } finally {
 
@@ -886,55 +869,6 @@ Please check your API key and internet connection.`;
     );
 
   }
-
-}
-
-
-
-// ==========================================
-// EXTRACT OPENAI RESPONSE TEXT
-// ==========================================
-
-function extractAIText(data) {
-
-  if (data.output_text) {
-    return data.output_text;
-  }
-
-
-  if (!Array.isArray(data.output)) {
-    return "";
-  }
-
-
-  let result = "";
-
-
-  data.output.forEach(item => {
-
-    if (!Array.isArray(item.content)) {
-      return;
-    }
-
-
-    item.content.forEach(content => {
-
-      if (
-        content.type === "output_text" &&
-        content.text
-      ) {
-
-        result +=
-          content.text;
-
-      }
-
-    });
-
-  });
-
-
-  return result.trim();
 
 }
 
@@ -1086,9 +1020,7 @@ document
 
   });
 
-
-
-// ==========================================
+  // ==========================================
 // EXPORT
 // ==========================================
 
@@ -1180,6 +1112,7 @@ function exportTXT(notes) {
 
   let content =
     "RESEARCH BUDDY NOTES\n";
+
 
   content +=
     "====================\n\n";
@@ -1403,87 +1336,27 @@ closeSettingsBtn.addEventListener(
 );
 
 
-saveApiKeyBtn.addEventListener(
-  "click",
-  () => {
+// Gemini API key extension ke andar
+// store nahi hogi.
+// API key Vercel backend par secure rahegi.
 
-    const key =
-      apiKeyInput.value.trim();
+if (saveApiKeyBtn) {
 
-
-    if (!key) {
+  saveApiKeyBtn.addEventListener(
+    "click",
+    () => {
 
       alert(
-        "Please enter your API key."
+        "AI is securely connected through the backend. You do not need to enter an API key here."
       );
 
-      return;
 
-    }
-
-
-    chrome.storage.local.set(
-      {
-        openaiApiKey: key
-      },
-      () => {
-
-        alert(
-          "AI key saved successfully."
-        );
-
-
-        settingsModal.classList.add(
-          "hidden"
-        );
-
-      }
-    );
-
-  }
-);
-
-
-
-// ==========================================
-// LOAD API KEY
-// ==========================================
-
-function loadSavedApiKey() {
-
-  chrome.storage.local.get(
-    ["openaiApiKey"],
-    data => {
-
-      if (data.openaiApiKey) {
-
-        apiKeyInput.value =
-          data.openaiApiKey;
-
-      }
+      settingsModal.classList.add(
+        "hidden"
+      );
 
     }
   );
-
-}
-
-
-async function getApiKey() {
-
-  return new Promise(resolve => {
-
-    chrome.storage.local.get(
-      ["openaiApiKey"],
-      data => {
-
-        resolve(
-          data.openaiApiKey || ""
-        );
-
-      }
-    );
-
-  });
 
 }
 
@@ -1499,6 +1372,7 @@ function getShortDomain(url) {
 
     const parsed =
       new URL(url);
+
 
     return parsed.hostname;
 
@@ -1521,9 +1395,12 @@ function escapeHtml(text) {
   const div =
     document.createElement("div");
 
+
   div.textContent =
     text || "";
+
 
   return div.innerHTML;
 
 }
+
